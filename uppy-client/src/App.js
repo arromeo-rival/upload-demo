@@ -1,23 +1,27 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
+
+import Uppy from '@uppy/core';
+import GoldenRetriever from '@uppy/golden-retriever';
+import Dashboard from '@uppy/react/lib/Dashboard';
+import XHRUpload from '@uppy/xhr-upload';
+import '@uppy/core/dist/style.css';
+import '@uppy/dashboard/dist/style.css';
+
+const uppy = new Uppy();
+
+uppy.use(GoldenRetriever, { serviceWorker: true });
+uppy.use(XHRUpload, {
+  endpoint: 'http://localhost:4000/upload',
+  fieldName: 'media',
+  formData: true
+});
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <Dashboard uppy={uppy} />
       </header>
     </div>
   );

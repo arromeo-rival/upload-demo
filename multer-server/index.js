@@ -14,7 +14,7 @@ app.use(
 
 app.post('/upload', upload.single('media'), function (req, res, next) {
   console.log('req.file', req.file);
-  res.send();
+  res.json({}).send();
 });
 
 app.listen('4000', () => {

@@ -1,30 +1,54 @@
-import { useEffect, useRef, useState } from 'react';
-import Uppy from '@uppy/core';
-import GoldenRetriever from '@uppy/golden-retriever';
-import XHRUpload from '@uppy/xhr-upload';
+import { useEffect, useRef, useState } from "react";
+import Uppy from "@uppy/core";
+import XHRUpload from "@uppy/xhr-upload";
 
 function useUppy() {
   const uppy = useRef();
   const [progress, setProgress] = useState();
+  const [preview, setPreview] = useState();
+  const [status, setStatus] = useState("idle");
 
   useEffect(() => {
-    uppy.current = new Uppy();
-
-    uppy.current.use(GoldenRetriever, { serviceWorker: true });
+    uppy.current = new Uppy({ debug: true });
     uppy.current.use(XHRUpload, {
-      endpoint: 'http://localhost:4000/upload',
-      fieldName: 'media',
-      formData: true
+      id: "xhr-plugin",
+      endpoint: "http://localhost:4000/upload",
+      fieldName: "media",
+      formData: true,
     });
 
-    uppy.current.on('upload', () => console.log('uploading...'));
+    uppy.current.on("upload-error", (file, error, response) => {
+      console.log("error with file:", file.id);
+      console.log("error message:", error);
+    });
+    uppy.current.on("progress", (progress) => setProgress(progress));
 
-    uppy.current.on('progress', (progress) => setProgress(progress));
+    uppy.current.on("upload", () => {
+      setStatus("uploading");
+    });
+
+    uppy.current.on("upload-success", () => {
+      setStatus("success");
+      setPreview(null);
+    });
   }, []);
 
-  function upload(fileObject) {
-    uppy.current?.addFile(fileObject);
-    uppy.current?.upload();
+  // Adds file to Uppy's state and creates a preview URL
+  function addFile(file) {
+    setPreview(URL.createObjectURL(file));
+    setStatus("ready");
+    uppy.current.addFile({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      data: file,
+      source: "Local",
+      isRemote: false,
+    });
+  }
+
+  function upload() {
+    return uppy.current.upload();
   }
 
   function cancel() {
@@ -36,10 +60,13 @@ function useUppy() {
   }
 
   return {
+    addFile,
     cancel,
     progress,
     retry,
-    upload
+    upload,
+    status,
+    preview,
   };
 }
 
